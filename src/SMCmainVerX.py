@@ -6,12 +6,11 @@ By CqtLW
 
 import numpy as np
 import numpy.linalg as LA
-from GetSam import Uni
 import ptor
 import GetPom as gp
 import numpy.random as npr
 import scipy.io as sio
-
+from GetSam import genUniSam
 
 import time
 
@@ -20,20 +19,18 @@ t1 = time.perf_counter()  #start the clock
 #%% User Supplied Quantities
 
 #---Ref sample
-Nt = np.int(1e4) # sample size
-nq = 1 # no. of qubit
-d = 2 ** nq # dimension
-nprob = d ** 2 # no. of probability d^2
+N_total = np.int(1e5) # sample size
+n_qubit = 2 # no. of qubit
+d = 2 ** n_qubit # dimension
+n_prob = d ** 2 # no. of probability d^2
 
-rhoref = Uni(Nt,d) # A uniform reference sample
-# to use the mle as rhoref, we write 
+rhoref = genUniSam(N_total,d) # A uniform reference sample
+# to use the mle as rhoref, we would need to get the rhomle first and make N_total copies
 
-pom = gp.nTetra(nq) # tedrahedron POM
-pomc = ptor.getpomc(pom,d,nprob) # put each POM as a column
-pomci = LA.inv(pomc) # inverse of pomc
-corpref = ptor.GetP(rhoref,pomc,Nt) # matrix of dimension Nt*nprob, storing the p values of the sample (as rows)
-
-# corpref = np.copy(corppy) # to use the last generated sample as the new reference
+pom = gp.nTetra(n_qubit) # tedrahedron POM
+# pomc = ptor.getpomc(pom,d,n_prob) # put each POM as a column
+# pomci = LA.inv(pomc) # inverse of pomc
+corpref = ptor.GetP(rhoref,pom) # matrix of dimension N_total*n_prob, storing the p values of the sample (as rows)
 
 #---Ref PDF
 # It could be either a function of rho and/or probabilities
@@ -45,19 +42,21 @@ def refPDF(rho,corp):
 
 #---Target PDF
     
-# pop = 10*np.ones([1,nprob])
-# pop = np.array([[10, 4, 6, 4, 7, 6, 5, 6, 5, 6, 10, 6, 5, 6, 8, 6]])
+# pop = 10 * np.ones([1,n_prob])
+pop = 10 * np.array([[10, 4, 6, 4, 7, 6, 5, 6, 5, 6, 10, 6, 5, 6, 8, 6]])
 #pop = np.array([[36,13,64,71,14,16,7,15,60,10,84,63,64,9,55,71,8,12,10,16,16,48,67,62,9,64,75,63,10,74,60,73,65,14,62,66,9,57,76,53,82,78,128,22,61,44,25,27,56,12,52,66,14,76,56,78,45,47,22,27,66,68,25,102]])
 
-pop = np.array([[100,200,250,450]]) # sigeye = 2e-2, scale = 1e5
+# pop = np.array([[100,200,250,450]]) # sigeye = 2e-2, scale = 1e5
 
+# This is only necessary if we want to get a uniform distribution in the bounded
+# likelihood region
 ppop = pop/np.sum(pop) # this is the peak probabilities if the peak is physical
 loglpeak = ptor.GetLik(ppop,pop) # log of the likelihood of the peak, using the maximum likelihood estimator as the peak
 # if the peak is not physical, use the matlab qse_apg.m to get the state of the MLE, then get its probability coordinates
 
 def tarPDF(rho,corp):
-     tarfx = np.real((np.sum(np.log(np.abs(corp))*pop,axis=1))) # the log of the likelihood function for the target posterior
-     return tarfx
+    tarfx = np.real((np.sum(np.log(np.abs(corp))*pop,axis=1))) # the log of the likelihood function for the target posterior
+    return tarfx
 #    return 0 # this is put 0 because we are aiming to get uniform distribution for a certain region/ states with certain properties
 
 #---Constr Func
@@ -86,29 +85,29 @@ def Constr(rho,corp,beta):
 
 # Prog() defines how one walks, paranow is the parameters (in a row) for the current point
 # sigeye is used to adjust the acceptance rate to be between 0.20 to 0.30, best is 0.234
-sigeye = 2e-3 #Gaussian Kernel with Cov. Mat. propto I
-def Prog(paranow): #Progate in the Prob. Space using eye
-     paranew = np.zeros(np.shape(paranow)) # initialization of the size of the new parameter
-     Step = sigeye*np.eye(nprob-1) # the Cov.Mat. used in the Gaussian kernel
-     # in prob. space, we do not walk the last coordinate as it is fixed by the other (0:-1) coordinates
-     paranew[:,0:-1] = npr.multivariate_normal(np.zeros([1,nprob-1]).flatten(), Step, Nt) # diff. walk use diff. Step
-     paranew = paranow + paranew
-     paranew[:,-1] = 1 - np.sum(paranew[:,0:-1],axis = 1)
-     return paranew
+# sigeye = 2e-5 #Gaussian Kernel with Cov. Mat. propto I
+# def Prog(paranow): #Progate in the Prob. Space using eye
+#      paranew = np.zeros(np.shape(paranow)) # initialization of the size of the new parameter
+#      Step = sigeye*np.eye(n_prob-1) # the Cov.Mat. used in the Gaussian kernel
+#      # in prob. space, we do not walk the last coordinate as it is fixed by the other (0:-1) coordinates
+#      paranew[:,0:-1] = npr.multivariate_normal(np.zeros([1,n_prob-1]).flatten(), Step, N_total) # diff. walk use diff. Step
+#      paranew = paranow + paranew
+#      paranew[:,-1] = 1 - np.sum(paranew[:,0:-1],axis = 1)
+#      return paranew
 
-#sigcov = 3.3e-2 #Gaussian Kernel with Cov. Mat propto Cov. Mat of the Current Sample
-#def Prog(paranow): #Progate in the Prob. Space using Cov
- #   paranew = np.zeros(np.shape(paranow))
-  #  Sig = np.cov(paranow[:,:-1], None, False) # the Cov. Mat. of the current sample
-   # Step = sigcov**2 / (nprob-1)**(1/3) * Sig # give the Cov.Mat. for the Gaussian kernal
-    #paranew[:,0:-1] = npr.multivariate_normal(np.zeros([1,nprob-1]).flatten(), Step, Nt)
-    #paranew = paranow + paranew
-    #paranew[:,-1] = 1 - np.sum(paranew[:,0:-1],axis = 1)
-    #return paranew
+sigcov = 1 #Gaussian Kernel with Cov. Mat propto Cov. Mat of the Current Sample
+def Prog(paranow): #Progate in the Prob. Space using Cov
+    paranew = np.zeros(np.shape(paranow))
+    Sig = np.cov(paranow[:,:-1], None, False) # the Cov. Mat. of the current sample
+    Step = sigcov**2 / (n_prob-1)**(1/3) * Sig # give the Cov.Mat. for the Gaussian kernal
+    paranew[:,0:-1] = npr.multivariate_normal(np.zeros([1,n_prob-1]).flatten(), Step, N_total)
+    paranew = paranow + paranew
+    paranew[:,-1] = 1 - np.sum(paranew[:,0:-1],axis = 1)
+    return paranew
 
 
 #Distribution Step
-betak = 40 # no. of distribution steps
+betak = 10 # no. of distribution steps
 nstep = 15 # no. of MC iteration per distribution step given in stat. papers as 15
 nstepl = 20 # no. of MC iteration for the last distribution step. should not be less than 15 to reduced the correlation
 
@@ -124,14 +123,14 @@ def intPDF(rho,corp,beta):
     intx = tarPDF(rho,corp) * (beta) + refPDF(rho,corp) * (1-beta) + Constr(rho,corp,beta)
     return intx
 
-Nthres = Nt * rthres # the resampling threshold
+Nthres = N_total * rthres # the resampling threshold
 betai = 0 # initial distribution is refPDF
 delbeta = 1 / betak
 rhonow = np.copy(rhoref)
 corpnow = np.copy(corpref)
 # use np.copy() instead of assigning the pointers using "=" directly to keep the original rhoref/corpref
-ess = Nt # initiate the effective sample size Nt
-w = np.ones([Nt,]) / Nt # initiate the weight to be 1/Nt for each sample point
+ess = N_total # initiate the effective sample size N_total
+w = np.ones([N_total,]) / N_total # initiate the weight to be 1/N_total for each sample point
 
 for betakk in np.arange(1,betak+1,1): # in matlab this would be for betakk=2:betak
     beta = betai + betakk * delbeta
@@ -150,16 +149,16 @@ for betakk in np.arange(1,betak+1,1): # in matlab this would be for betakk=2:bet
             
             if (ess < Nthres) + (betakk == betak): # at the last step, if ess<Nthres we do reseampling
                 print('resam \n')
-                rsind = npr.choice(Nt,Nt,p=w) # resampling index, this line automaticly does the resampling
+                rsind = npr.choice(N_total,N_total,p=w) # resampling index, this line automaticly does the resampling
                 rhonow = rhonow[rsind,:,:]
                 corpnow = corpnow[rsind,:]
                 intgx = intgx[rsind] # the distribution probability aftet he resampling, without reevaluating the values
                 # reassign the weight
-                w = 1 / Nt *np.ones([Nt,])
+                w = 1 / N_total *np.ones([N_total,])
                 ess = 1 / np.sum(w**2)
                 
         corpnew = Prog(corpnow) # MC propagating in probability space
-        rhonew = ptor.GetRho(corpnew,pomci)
+        rhonew = ptor.GetRho(corpnew,pom)
         intfx = intPDF(rhonew,corpnew,beta) # the desity after MC iteraction
 
         #accept-reject
@@ -170,12 +169,12 @@ for betakk in np.arange(1,betak+1,1): # in matlab this would be for betakk=2:bet
         rhonow[acc,:,:] = rhonew[acc,:,:]
         corpnow[acc,:] = corpnew[acc,:]
         intgx[acc] = intfx[acc]
-        accr = np.sum(acc) / Nt
-    print(accr)
+        accr = np.sum(acc) / N_total
+    print(['ar is', accr])
     print(['time is', time.perf_counter() - t1]) # desplay elapsed time
 
 # the variables to be stored and its file name
 phnow =   (Constr(rhonow,corpnow,1)==0)
 rhopy = rhonow[phnow,:,:]
 corppy = corpnow[phnow,:]
-sio.savemat('pycorp1q1e4S.mat', mdict={'corppy':corppy,'rhopy':rhopy})
+

@@ -66,7 +66,7 @@ def UniR(Nt,d):
     rhosb = rhob / trrb
     return rhosb
 
-def Uni(Nt,d):
+def genUniSam(Nt,d):
     Cb = npr.randn(Nt,d,d)
     Bb = npr.randn(Nt,d,d)
     Ab = Bb+Cb*1j

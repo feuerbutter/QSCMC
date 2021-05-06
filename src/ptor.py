@@ -10,13 +10,16 @@ import numpy as np
 from concurrent.futures import ThreadPoolExecutor
 # from numba import jit
 
-def getpomc(pom,d,nprob):
-    
+def getpomc(pom):
+    d = np.size(pom,1)
+    nprob = np.size(pom,0)
     pomc = np.transpose(np.reshape(np.transpose(pom,(0,2,1)),(d**2,nprob)))
     
     return pomc
 
-def GetRho(corp,pomci):
+def GetRho(corp,pom):
+    pomc = getpomc(pom)
+    pomci = LA.inv(pomc) # inverse of pomc
     cs = np.shape(corp)
     Nt = int(cs[0])
     d = int(np.sqrt(cs[1]))
@@ -24,8 +27,10 @@ def GetRho(corp,pomci):
     rho = np.reshape(rhor,(Nt,d,d))
     return rho
 
-def GetP(rho,pomc,Nt):
+def GetP(rho,pom):
+    pomc = getpomc(pom)
     d = np.size(rho,axis=1)
+    Nt = np.size(rho,0)
     rhor = np.reshape(rho,(Nt,d**2))
     corp = np.real(rhor@pomc)
     return corp
