@@ -8,11 +8,13 @@ import QSCMC as Q
 import numpy as np
 import time 
 import scipy.io as sio
+import BouEnt as be
+
 
 t1 = time.perf_counter()  #start the clock
 
 #----Running Parameters (sam_type independent)
-N_total = int(1e5) # no. of points in the sample
+N_total = int(1e4) # no. of points in the sample
 betak = 5
 step_size = 1 #Gaussian Kernel with Cov. Mat propto Cov. Mat of the Current Sample
 n_step = 15
@@ -21,23 +23,23 @@ n_step = 15
 # Specifying the type of target sample, 
 #----sam_type specific paras--------------------
 
-#----Target Posterior
-# 'posterior' for a posterior distribution with the data counts,
-# or set to anything else for Bound-entanglement(BE) or bounded likelihood region
-# sam_type = 'posterior' 
-# constr_type = 'phys'
-n_qubit = 2 # no. of qubit
-pop = 10 * np.array([[10, 4, 6, 4, 7, 6, 5, 6, 5, 6, 10, 6, 5, 6, 8, 6]]) # data counts for the posterior
-# rho_acc,corp_acc = Q.genTarSam(N_total,n_qubit,sam_type,constr_type,pop,betak,n_step,step_size)
-rho_acc,corp_acc = Q.genTarSamPos(N_total,n_qubit,pop,betak,n_step,step_size)
+# #----Target Posterior
+# # 'posterior' for a posterior distribution with the data counts,
+# # or set to anything else for Bound-entanglement(BE) or bounded likelihood region
+# # sam_type = 'posterior' 
+# # constr_type = 'phys'
+# n_qubit = 2 # no. of qubit
+# pop = 10 * np.array([[10, 4, 6, 4, 7, 6, 5, 6, 5, 6, 10, 6, 5, 6, 8, 6]]) # data counts for the posterior
+# # rho_acc,corp_acc = Q.genTarSam(N_total,n_qubit,sam_type,constr_type,pop,betak,n_step,step_size)
+# rho_acc,corp_acc = Q.genTarSamPos(N_total,n_qubit,pop,betak,n_step,step_size)
 
-#----Bounded likelihood region
-sam_type = ''
-constr_type = 'BLR'
-scale_BLR = 1e5
+# #----Bounded likelihood region
+# sam_type = ''
+# constr_type = 'BLR'
+# scale_BLR = 1e5
 
-pop = 10 * np.array([[10, 4, 6, 4, 7, 6, 5, 6, 5, 6, 10, 6, 5, 6, 8, 6]]) # data counts for the posterior
-logL_peak = # supplied by user, or obtained through superfast qse in MATLAB
+# pop = 10 * np.array([[10, 4, 6, 4, 7, 6, 5, 6, 5, 6, 10, 6, 5, 6, 8, 6]]) # data counts for the posterior
+# logL_peak = # supplied by user, or obtained through superfast qse in MATLAB
 
 
 #----Bound Entanglement
@@ -50,7 +52,10 @@ scale_cnn = 1e3
 
 rho_acc,corp_acc = Q.genTarSamBE(N_total,d1,d2,betak,n_step,step_size,scale_ppn,scale_cnn)
 
+ppn_acc,ccn_acc = be.GetPnCn(rho_acc,d1,d2)
+be_acc = (ppn_acc>0) & (ccn_acc>1)
+n_be = np.sum(be_acc)
 
-
+print(['No. of bound entangled state is ', n_be])
 print(['time is', time.perf_counter() - t1])
-sio.savemat('pycorp2q1e5c1e3bk5.mat', mdict={'corppy':corp_acc,'rhopy':rho_acc})
+# sio.savemat('pycorp2q1e5c1e3bk5.mat', mdict={'corppy':corp_acc,'rhopy':rho_acc})
