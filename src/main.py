@@ -48,7 +48,7 @@ d2 = 3
 scale_ppn = 1e3
 scale_cnn = 1e3
 
-
+rho_acc,corp_acc = Q.genTarSamBE(N_total,d1,d2,betak,n_step,step_size,scale_ppn,scale_cnn)
 
 
 

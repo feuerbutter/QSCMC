@@ -105,12 +105,43 @@ def genTarSamPos(N_total,n_qubit,pop,betak,n_step,step_size):
 
     # run betak distribution propagation steps
     rhonow,corpnow = dstrProg(betak,n_step,N_total,rhonow,corpnow,pom,step_size,intPDF)
-    phnow =   (constr(rhonow)==1)
-    rhopy = rhonow[phnow,:,:]
-    corppy = corpnow[phnow,:]
-    return rhopy,corppy
 
+    return rhonow,corpnow
 
+def genTarSamBE(N_total,d1,d2,betak,n_step,step_size,scale_ppn,scale_cnn):
+    n_step_last = n_step + 5
+
+    def tarPDF(rho,corp):
+        return 0
+    def constr(rho,beta):
+        ppn,ccn = be.GetPnCn(rho,d1,d2)
+        constr_val = np.log((1+np.tanh(scale_ppn*beta*ppn))/2) + np.log((1+np.tanh(scale_cnn*beta*(ccn-1)))/2)
+        constr_val = constr_val + np.log(ptor.IsPhy_C(rho)) # The BE states should of course be physical 
+        return constr_val
+    def intPDF(rho,corp,beta):
+        intx = tarPDF(rho,corp) * (beta) + refPDF(rho,corp) * (1-beta) + constr(rho,beta)
+        return intx
+    
+    d = d1 * d2
+    n_prob = d ** 2
+
+    # create POM for the composite system, the default is using square root pom, user can change it when suitable
+    pom1 = gp.SqrtPom(d1)
+    pom2 = gp.SqrtPom(d2)
+    pom = np.zeros((n_prob,d,d),dtype=np.complex_)
+
+    for idx_1 in np.arange(0,d1**2):
+        for idx_2 in np.arange(0,d2**2):
+            pom[idx_1*d2**2+idx_2,:,:] = np.kron(pom1[idx_1,:,:],pom2[idx_2,:,:])
+
+    rhoref = genUniSam(N_total,d) # A uniform reference sample
+    # to use the mle as rhoref, we would need to get the rhomle first and make N_total copies
+    corpref = ptor.GetP(rhoref,pom) # matrix of dimension N_total*n_prob, storing the p values of the sample (as rows)
+    rhonow = np.copy(rhoref)
+    corpnow = np.copy(corpref)
+    rhonow,corpnow = dstrProg(betak,n_step,N_total,rhonow,corpnow,pom,step_size,intPDF)
+    
+    return rhonow,corpnow
 
 def genTarSam(N_total,n_qubit,sam_type,constr_type,pop,betak,n_step,step_size):
 
