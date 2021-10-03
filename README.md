@@ -1,22 +1,12 @@
 # QSCMC
 
-ReadMe.txt
-Long ago
-8 Aug 2019
-H
-Han Rui edited an item
-Text
-ReadMe.txt
-7 Aug 2019
-w
-You uploaded an item
-Text
-ReadMe.txt
 """
 Manual for the SCMC package
 created on 7th Aug 2019
 by CqtLWJ
 """
+
+This is the old version of README, and it would be updated soon.
 
 SMCmainVerX 
 	is the main run file, where one needs to provide the reference
