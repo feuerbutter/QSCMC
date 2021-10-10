@@ -30,10 +30,14 @@ def GetRho(corp,pom):
 def GetP(rho,pom):
     pomc = getpomc(pom)
     d = np.size(rho,axis=1)
-    Nt = np.size(rho,0)
+    if len(np.shape(rho)) > 2:
+        Nt = np.size(rho,0)
+    else:
+        Nt = 1
     rhor = np.reshape(rho,(Nt,d**2))
     corp = np.real(rhor@pomc)
     return corp
+
 
 def AtoR(Ab,Nt):
     Abh = np.conj(np.transpose(Ab,(0,2,1)))
