@@ -5,8 +5,16 @@ Manual for the SCMC package
 created on 7th Aug 2019
 by CqtLWJ
 """
+Please run using main.py by first modifying the parameters for your purpose through
+commenting and uncommenting the necessary section.
+The default 'python3 main.py' would make a 3x3 BE sample in the data folder.
 
-This is the old version of README, and it would be updated soon.
+More updates regarding the other parts are coming.
+
+Below is the old version of README. Some are still relevant while others are not. 
+It would be updated soon.
+
+
 
 SMCmainVerX 
 	is the main run file, where one needs to provide the reference
