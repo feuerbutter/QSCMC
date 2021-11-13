@@ -5,15 +5,25 @@ Manual for the SCMC package
 created on 7th Aug 2019
 by CqtLWJ
 """
-Please run using main.py by first modifying the parameters for your purpose through
-commenting and uncommenting the necessary section.
-The default 'python3 main.py' would make a 3x3 BE sample in the data folder.
+## Introduction
+This package utilizes the idea of Sequentially Constraint Monte Carlo to produce quantum samples with different properties. The current codes support:
+- Samples with a target posterior
+- Uniform samples within a bounded likelihood region
+- Samples with bound entanglement for different bipartite systems
 
-More updates regarding the other parts are coming.
+The code has a modular structure, so it should be straight-forward to extend its application to other samples. Users are very welcome to extend application to produce different samples.
 
-Below is the old version of README. Some are still relevant while others are not. 
-It would be updated soon.
+## Getting Started
+This package has two main folders. One is *src*, where the source codes are located, and the other is *data*, the default directory for data storage.
 
+The sampling can be run in the *src* directory with 'python3 main.py'. The default settings would make a 3x3 BE sample in the data folder.
+
+## Advanced Use
+Users can modidy the *main.py* accordingly to produce different samples.
+
+For all cases, users would need to supply a set of parameters to start the codes running. Examplary parameters are given, but would require modification for different target distributions. 
+
+## Utility Functions
 
 
 SMCmainVerX 
