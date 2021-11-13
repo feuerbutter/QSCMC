@@ -75,8 +75,6 @@ def nTetra(n):
         
     return pom
         
-
-        
 def RandPom(d,nprob,scale):
     ex = -1
     pom = np.zeros((nprob,d,d),dtype=np.complex_)
@@ -107,7 +105,6 @@ def QtsPom():
         
 
     return pom
-
 
 def SqrtPom(d):
     nprob = d**2

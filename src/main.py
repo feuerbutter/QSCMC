@@ -18,28 +18,32 @@ t1 = time.perf_counter()  #start the clock
 # setting the directory for the data folder
 data_dir = dirname('../data/')
 
+#----Specifying the type of target sample, "BE" for bound-entangled state, "POS" for target posterior. "BLR" for bounded likelihood region
+sam_type = "BE"
+
 #----Running Parameters (sam_type independent)
 N_total = int(1e3) # no. of points in the sample
-n_step = 15
+n_step = 15 # no. of MC steps between consecutive distributions. 
 
 
-# Specifying the type of target sample, "BE" for bound-entangled state, "POS" for target posterior. "BLR" for bounded likelihood region
-sam_type = "BE"
 
 #----sam_type specific paras--------------------
 if sam_type == "POS":
     #----Target Posterior
-    #--Sample paras for 2qb pop with 1000 counts
+    betak = 10 # no. of distribution steps
+    step_size = 1. # MC step size
+
+    #--Sample paras for 2qb pop with 100 counts
     n_qubit = 2 # no. of qubit
     pop = 10 * np.array([[10, 4, 6, 4, 7, 6, 5, 6, 5, 6, 10, 6, 5, 6, 8, 6]]) # data counts for the posterior
 
-    betak = 10
-    step_size = 1.
+    save_output = False # set to True if want to save the final output, default is False for calibration
+    filename = "POS2qb_example.mat" # name of the output data file
 
 elif sam_type == "BLR":
     #----Bounded Likelihood Region---------------------
-    betak = 1000
-    step_size = 1e-8
+    betak = 1000 # no. of distribution steps
+    step_size = 1e-8 # MC step size
 
     # user needs to put the rho_mle in the data folder and the following line imports it
     mat_name = 'mle2qb.mat' # name of the mat data file that stores the rho_mle
@@ -48,21 +52,22 @@ elif sam_type == "BLR":
 
     n_qubit = 2 # no. of qubit
     pop = np.array([[10, 4, 6, 4, 7, 6, 5, 6, 5, 6, 10, 6, 5, 6, 8, 6]]) # data counts for the posterior
-    scale_BLR = 1e5
-    save_output = False
-    filename = "BE3x3_example.mat"
+    scale_BLR = 1e5 #the scale parameter for the likelihood boundary constraint
+
+    save_output = False # set to True if want to save the final output, default is False for calibration
+    filename = "BLR2qb_example.mat" # name of the output data file
 
 elif sam_type == "BE":
-    #----Bound Entanglement---------------------------------
-
+    #----Bound Entanglement---------------------------
+    betak = 20 # no. of distribution steps
+    step_size = 3e-9  # MC step size
+ 
     #--Sample paras for 3x3
-    betak = 20
-    step_size = 3e-9 
-    d1 = 3
-    d2 = 3
+    d1 = 3 #dimension of the first system
+    d2 = 3 #dimension of the second system
     d = d1 * d2
-    scale_ppn = 1e4
-    scale_cnn = 3e3
+    scale_ppn = 1e4 #the scale parameter for the postive partial transpose constraint, a_p in the paper
+    scale_cnn = 3e3 #the scale parameter for the CCNR constraint, a_e in the paper
 
     #--Sample paras for 2x4
     # betak = int(20)
@@ -72,6 +77,9 @@ elif sam_type == "BE":
     # d = d1 * d2
     # scale_ppn = 2e2
     # scale_cnn = 8e2
+
+    save_output = False # set to True if want to save the final output, default is False for calibration
+    filename = "BE3x3_example.mat" # name of the output data file
 
 else: 
     print("sam_type not supported yet, please supply the corresponding ref_pdf and constraints, if applicable.")

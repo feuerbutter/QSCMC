@@ -20,9 +20,6 @@ def Realign(Rho,d1,d2):
             Rrho[:,j*d1+i,:] = np.reshape(Srho,(Nt,d2*d2))
     return Rrho
 
-
-                
-
 def ParTran(Rho,d1,d2):
     Nt = np.size(Rho,axis=0)
     Trho = np.zeros([Nt,d1*d2,d2*d1],dtype=np.complex_)
@@ -32,7 +29,6 @@ def ParTran(Rho,d1,d2):
         for j in np.arange(0,d1):
             Srho = Rho[:,i*d2:(i+1)*d2,j*d2:(j+1)*d2]
             Trho[:,i*d2:(i+1)*d2,j*d2:(j+1)*d2] = np.transpose(Srho,(0,2,1))
-            
     return Trho
 
 def GetPnCn(rho,d1,d2):

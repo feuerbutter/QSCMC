@@ -15,8 +15,6 @@ def v73(filename,varname):
     var = np.array(var)
     return var
 
-
-
 def vo(filename,varname,ifstkm):
     
     f = sio.loadmat(filename)
